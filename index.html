@@ -17,6 +17,12 @@ button { width: 95%; padding: 12px; margin-top: 10px; border: none; border-radiu
 .hidden { display: none; }
 .receipt { border: 2px dashed #333; padding: 15px; margin-top: 15px; text-align: left; background: #fff; }
 .line { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 5px 0; }
+
+@media print {
+    body * { visibility: hidden; }
+    #print-area, #print-area * { visibility: visible; }
+    #print-area { position: absolute; left: 0; top: 0; width: 100%; }
+}
 </style>
 </head>
 
@@ -33,26 +39,24 @@ button { width: 95%; padding: 12px; margin-top: 10px; border: none; border-radiu
 <input type="text" id="reg-user" placeholder="Username">
 <input type="password" id="reg-pass" placeholder="Password">
 <button class="btn-blue" onclick="doRegister()">Register</button>
-<p onclick="showLogin()">Already have account? Login</p>
+<p onclick="showLogin()">Login</p>
 </div>
 
-<!-- ✅ CLEARLY UPDATED LOGIN -->
+<!-- ✅ UPDATED LOGIN -->
 <div id="div-login" class="box hidden">
 <h2>Login</h2>
 
-<p style="font-size:13px; text-align:left;">Enter Username</p>
-<input type="text" id="login-user" placeholder="Username">
+<p style="font-size:13px; text-align:left;">Username</p>
+<input type="text" id="login-user" placeholder="Enter Username">
 
-<p style="font-size:13px; text-align:left;">Enter Password</p>
-<input type="password" id="login-pass" placeholder="Password">
+<p style="font-size:13px; text-align:left;">Password</p>
+<input type="password" id="login-pass" placeholder="Enter Password">
 
 <button class="btn-blue" onclick="doLogin()">Login</button>
 
-<!-- ✅ NEW BUTTON -->
-<button style="background:#ddd; color:black;" onclick="showRegister()">
+<p style="font-size:12px; color:blue; cursor:pointer;" onclick="showRegister()">
 New User Registration
-</button>
-
+</p>
 </div>
 
 <div id="div-dash" class="box hidden">
@@ -66,6 +70,12 @@ New User Registration
 <div id="qrcode"></div>
 <button class="btn-green" onclick="gotoReceipt()">Confirm</button>
 </div>
+
+<button onclick="viewRecords()">View Records</button>
+<button onclick="printRecords()">Print Records</button>
+<button onclick="exportRecords()">Export Records</button>
+
+<div id="recordList" class="hidden"></div>
 
 <button onclick="location.reload()">Logout</button>
 </div>
@@ -139,7 +149,7 @@ new QRCode(document.getElementById("qrcode"),{text:link,width:180,height:180});
 document.getElementById('qr-container').classList.remove('hidden');
 }
 
-// RECEIPT
+// RECEIPT + SAVE
 function gotoReceipt(){
 let amt = document.getElementById('bill-amt').value;
 
@@ -147,6 +157,10 @@ document.getElementById('out-name').innerText = currentUser.name;
 document.getElementById('out-upi').innerText = currentUser.upi;
 document.getElementById('out-amt').innerText = amt;
 document.getElementById('out-date').innerText = new Date().toLocaleString();
+
+let rec = JSON.parse(localStorage.getItem("upi_records")) || [];
+rec.unshift({name:currentUser.name,amount:amt,date:new Date().toLocaleString()});
+localStorage.setItem("upi_records", JSON.stringify(rec));
 
 document.getElementById('div-dash').classList.add('hidden');
 document.getElementById('div-receipt').classList.remove('hidden');
@@ -157,6 +171,33 @@ document.getElementById('div-receipt').classList.add('hidden');
 document.getElementById('div-dash').classList.remove('hidden');
 document.getElementById('qr-container').classList.add('hidden');
 document.getElementById('bill-amt').value="";
+}
+
+// VIEW
+function viewRecords(){
+let data = JSON.parse(localStorage.getItem("upi_records")) || [];
+let div = document.getElementById("recordList");
+
+div.innerHTML = data.map(r=>`₹${r.amount} - ${r.name}<br>${r.date}<hr>`).join("");
+div.classList.remove("hidden");
+}
+
+// PRINT
+function printRecords(){
+let data = JSON.parse(localStorage.getItem("upi_records")) || [];
+let w = window.open();
+w.document.write(data.map(r=>`${r.name} ₹${r.amount} ${r.date}<br>`).join(""));
+w.print();
+}
+
+// EXPORT
+function exportRecords(){
+let data = JSON.parse(localStorage.getItem("upi_records")) || [];
+let blob = new Blob([JSON.stringify(data)],{type:"application/json"});
+let a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="records.json";
+a.click();
 }
 
 </script>
