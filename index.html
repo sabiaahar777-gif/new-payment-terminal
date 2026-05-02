@@ -13,6 +13,7 @@ body { font-family: sans-serif; background: #e5e7eb; display: flex; justify-cont
 
 input { width: 90%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
 
+/* 🔥 UPDATED BUTTONS */
 button {
     width: 95%;
     padding: 12px;
@@ -22,15 +23,16 @@ button {
     font-weight: bold;
     cursor: pointer;
     font-size: 16px;
+    color: white;
     transition: 0.2s;
 }
 
-button:hover { opacity: 0.9; }
+.btn-blue { background: linear-gradient(45deg,#3b82f6,#1d4ed8); }
+.btn-green { background: linear-gradient(45deg,#22c55e,#15803d); }
+.btn-red { background: linear-gradient(45deg,#ef4444,#b91c1c); }
+.btn-grey { background: linear-gradient(45deg,#9ca3af,#4b5563); }
 
-.btn-blue { background: #2563eb; color: white; }
-.btn-green { background: #16a34a; color: white; }
-.btn-red { background: #dc2626; color: white; }
-.btn-grey { background: #6b7280; color: white; }
+button:hover { transform: scale(1.03); }
 
 .hidden { display: none; }
 
@@ -111,8 +113,8 @@ New User Registration
 <div class="line"><span>Amount</span><b>₹<span id="out-amt"></span></b></div>
 <div class="line"><span>Date</span><span id="out-date"></span></div>
 
-<!-- NEW STATUS -->
-<div class="line"><span>Status</span><b id="out-status">SUCCESS</b></div>
+<!-- ✅ STATUS GREEN -->
+<div class="line"><span>Status</span><b id="out-status" style="color:green;">SUCCESS</b></div>
 
 </div>
 
@@ -183,17 +185,6 @@ document.getElementById('out-upi').innerText = currentUser.upi;
 document.getElementById('out-amt').innerText = amt;
 document.getElementById('out-date').innerText = new Date().toLocaleString();
 
-// STATUS COLOR
-let statusEl = document.getElementById('out-status');
-if(amt > 0){
-    statusEl.innerText = "SUCCESS";
-    statusEl.style.color = "green";
-}else{
-    statusEl.innerText = "FAILED";
-    statusEl.style.color = "red";
-}
-
-// SAVE
 let rec = JSON.parse(localStorage.getItem("upi_records")) || [];
 rec.unshift({name:currentUser.name,amount:amt,date:new Date().toLocaleString()});
 localStorage.setItem("upi_records", JSON.stringify(rec));
