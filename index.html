@@ -10,11 +10,30 @@
 <style>
 body { font-family: sans-serif; background: #e5e7eb; display: flex; justify-content: center; padding: 20px; }
 .box { background: white; width: 100%; max-width: 380px; padding: 20px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); text-align: center; }
+
 input { width: 90%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
-button { width: 95%; padding: 12px; margin-top: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
+
+button {
+    width: 95%;
+    padding: 12px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 16px;
+    transition: 0.2s;
+}
+
+button:hover { opacity: 0.9; }
+
 .btn-blue { background: #2563eb; color: white; }
 .btn-green { background: #16a34a; color: white; }
+.btn-red { background: #dc2626; color: white; }
+.btn-grey { background: #6b7280; color: white; }
+
 .hidden { display: none; }
+
 .receipt { border: 2px dashed #333; padding: 15px; margin-top: 15px; text-align: left; background: #fff; }
 .line { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 5px 0; }
 
@@ -43,7 +62,7 @@ button { width: 95%; padding: 12px; margin-top: 10px; border: none; border-radiu
 <p onclick="showLogin()">Login</p>
 </div>
 
-<!-- LOGIN (UPDATED ONLY HERE) -->
+<!-- LOGIN -->
 <div id="div-login" class="box hidden">
 <h2>Login</h2>
 
@@ -60,7 +79,7 @@ New User Registration
 </p>
 </div>
 
-<!-- DASHBOARD SAME -->
+<!-- DASHBOARD -->
 <div id="div-dash" class="box hidden">
 <h3>Welcome, <span id="user-name"></span></h3>
 <p>UPI: <span id="user-upi"></span></p>
@@ -73,16 +92,16 @@ New User Registration
 <button class="btn-green" onclick="gotoReceipt()">Confirm</button>
 </div>
 
-<button onclick="viewRecords()">View Records</button>
-<button onclick="printRecords()">Print Records</button>
-<button onclick="exportRecords()">Export Records</button>
+<button class="btn-grey" onclick="viewRecords()">View Records</button>
+<button class="btn-blue" onclick="printRecords()">Print Records</button>
+<button class="btn-green" onclick="exportRecords()">Export Records</button>
 
 <div id="recordList" class="hidden"></div>
 
-<button onclick="location.reload()">Logout</button>
+<button class="btn-red" onclick="location.reload()">Logout</button>
 </div>
 
-<!-- RECEIPT SAME -->
+<!-- RECEIPT -->
 <div id="div-receipt" class="box hidden">
 <h2>Payment Done</h2>
 
@@ -91,10 +110,14 @@ New User Registration
 <div class="line"><span>UPI</span><b id="out-upi"></b></div>
 <div class="line"><span>Amount</span><b>₹<span id="out-amt"></span></b></div>
 <div class="line"><span>Date</span><span id="out-date"></span></div>
+
+<!-- NEW STATUS -->
+<div class="line"><span>Status</span><b id="out-status">SUCCESS</b></div>
+
 </div>
 
-<button onclick="window.print()">Print</button>
-<button onclick="resetDash()">New</button>
+<button class="btn-blue" onclick="window.print()">Print</button>
+<button class="btn-green" onclick="resetDash()">New</button>
 </div>
 
 <script>
@@ -118,7 +141,6 @@ document.getElementById('div-register').classList.add('hidden');
 document.getElementById('div-login').classList.remove('hidden');
 }
 
-// NEW FUNCTION ONLY
 function showRegister() {
 document.getElementById('div-login').classList.add('hidden');
 document.getElementById('div-register').classList.remove('hidden');
@@ -152,7 +174,7 @@ new QRCode(document.getElementById("qrcode"),{text:link,width:180,height:180});
 document.getElementById('qr-container').classList.remove('hidden');
 }
 
-// RECEIPT + SAVE
+// RECEIPT
 function gotoReceipt(){
 let amt = document.getElementById('bill-amt').value;
 
@@ -161,6 +183,17 @@ document.getElementById('out-upi').innerText = currentUser.upi;
 document.getElementById('out-amt').innerText = amt;
 document.getElementById('out-date').innerText = new Date().toLocaleString();
 
+// STATUS COLOR
+let statusEl = document.getElementById('out-status');
+if(amt > 0){
+    statusEl.innerText = "SUCCESS";
+    statusEl.style.color = "green";
+}else{
+    statusEl.innerText = "FAILED";
+    statusEl.style.color = "red";
+}
+
+// SAVE
 let rec = JSON.parse(localStorage.getItem("upi_records")) || [];
 rec.unshift({name:currentUser.name,amount:amt,date:new Date().toLocaleString()});
 localStorage.setItem("upi_records", JSON.stringify(rec));
@@ -176,7 +209,7 @@ document.getElementById('qr-container').classList.add('hidden');
 document.getElementById('bill-amt').value="";
 }
 
-// VIEW
+// RECORDS
 function viewRecords(){
 let data = JSON.parse(localStorage.getItem("upi_records")) || [];
 let div = document.getElementById("recordList");
@@ -185,7 +218,6 @@ div.innerHTML = data.map(r=>`₹${r.amount} - ${r.name}<br>${r.date}<hr>`).join(
 div.classList.remove("hidden");
 }
 
-// PRINT
 function printRecords(){
 let data = JSON.parse(localStorage.getItem("upi_records")) || [];
 let w = window.open();
@@ -193,7 +225,6 @@ w.document.write(data.map(r=>`${r.name} ₹${r.amount} ${r.date}<br>`).join(""))
 w.print();
 }
 
-// EXPORT
 function exportRecords(){
 let data = JSON.parse(localStorage.getItem("upi_records")) || [];
 let blob = new Blob([JSON.stringify(data)],{type:"application/json"});
