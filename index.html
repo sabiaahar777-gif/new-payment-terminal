@@ -20,9 +20,9 @@ button { width: 95%; padding: 12px; margin-top: 10px; border: none; border-radiu
 
 /* ✅ ONLY RECEIPT PRINT */
 @media print {
-    body * { display: none !important; }
-    #print-area, #print-area * { display: block !important; }
-    #print-area { position: absolute; top: 0; left: 0; width: 100%; }
+    body * { visibility: hidden; }
+    #print-area, #print-area * { visibility: visible; }
+    #print-area { position: absolute; left: 0; top: 0; width: 100%; }
 }
 </style>
 </head>
@@ -30,13 +30,13 @@ button { width: 95%; padding: 12px; margin-top: 10px; border: none; border-radiu
 <body>
 
 <div id="div-register" class="box">
-<h2>Register</h2>
-<input type="text" id="reg-name" placeholder="Name">
+<h2>Register User</h2>
+<input type="text" id="reg-name" placeholder="Full Name">
 <input type="text" id="reg-upi" placeholder="UPI ID">
 <input type="text" id="reg-user" placeholder="Username">
 <input type="password" id="reg-pass" placeholder="Password">
 <button class="btn-blue" onclick="doRegister()">Register</button>
-<p onclick="showLogin()">Login</p>
+<p onclick="showLogin()">Already have account? Login</p>
 </div>
 
 <div id="div-login" class="box hidden">
@@ -47,10 +47,10 @@ button { width: 95%; padding: 12px; margin-top: 10px; border: none; border-radiu
 </div>
 
 <div id="div-dash" class="box hidden">
-<h3 id="user-name"></h3>
-<p id="user-upi"></p>
+<h3>Welcome, <span id="user-name"></span></h3>
+<p>UPI: <span id="user-upi" style="color:blue"></span></p>
 
-<input type="number" id="bill-amt" placeholder="Amount">
+<input type="number" id="bill-amt" placeholder="Enter Amount">
 
 <button class="btn-blue" onclick="makeQR()">Generate QR</button>
 
@@ -59,17 +59,18 @@ button { width: 95%; padding: 12px; margin-top: 10px; border: none; border-radiu
 <button class="btn-green" onclick="gotoReceipt()">Confirm</button>
 </div>
 
+<!-- ✅ NEW BUTTONS -->
 <button class="btn-blue" onclick="viewRecords()">View Records</button>
 <button class="btn-green" onclick="printRecords()">Print Records</button>
-<button class="btn-blue" onclick="exportRecords()">Export</button>
+<button class="btn-blue" onclick="exportRecords()">Export Records</button>
 
-<div id="recordList"></div>
+<div id="recordList" class="hidden" style="text-align:left;"></div>
 
 <button onclick="location.reload()">Logout</button>
 </div>
 
 <div id="div-receipt" class="box hidden">
-<h2>Payment Done</h2>
+<h2>Payment Done!</h2>
 
 <div id="print-area" class="receipt">
 <div class="line"><span>Name</span><b id="out-name"></b></div>
@@ -91,10 +92,10 @@ let upi = document.getElementById("reg-upi").value;
 let user = document.getElementById("reg-user").value;
 let pass = document.getElementById("reg-pass").value;
 
-if(!name || !upi || !user || !pass) return alert("Fill all");
+if(!name || !upi || !user || !pass) return alert("Fill all fields");
 
 localStorage.setItem(user, JSON.stringify({name,upi,pass}));
-alert("Registered");
+alert("Registered!");
 showLogin();
 }
 
@@ -122,7 +123,7 @@ document.getElementById("user-upi").innerText = data.upi;
 // QR
 function makeQR(){
 let amt = document.getElementById("bill-amt").value;
-if(!amt) return alert("Enter amount");
+if(!amt || amt<=0) return alert("Enter valid amount");
 
 document.getElementById("qrcode").innerHTML="";
 let link = "upi://pay?pa="+currentUser.upi+"&pn="+currentUser.name+"&am="+amt+"&cu=INR";
@@ -131,7 +132,7 @@ new QRCode(document.getElementById("qrcode"),{text:link,width:180,height:180});
 document.getElementById("qr-container").classList.remove("hidden");
 }
 
-// RECEIPT
+// RECEIPT + SAVE
 function gotoReceipt(){
 let amt = document.getElementById("bill-amt").value;
 
@@ -141,9 +142,14 @@ document.getElementById("out-amt").innerText = amt;
 document.getElementById("out-date").innerText = new Date().toLocaleString();
 
 // SAVE RECORD
-let rec = JSON.parse(localStorage.getItem("upi_records")) || [];
-rec.unshift({name:currentUser.name,amount:amt,date:new Date().toLocaleString()});
-localStorage.setItem("upi_records", JSON.stringify(rec));
+let records = JSON.parse(localStorage.getItem("upi_records")) || [];
+records.unshift({
+name: currentUser.name,
+upi: currentUser.upi,
+amount: amt,
+date: new Date().toLocaleString()
+});
+localStorage.setItem("upi_records", JSON.stringify(records));
 
 document.getElementById("div-dash").classList.add("hidden");
 document.getElementById("div-receipt").classList.remove("hidden");
@@ -158,30 +164,70 @@ document.getElementById("bill-amt").value="";
 
 // VIEW
 function viewRecords(){
-let d = JSON.parse(localStorage.getItem("upi_records")) || [];
+let data = JSON.parse(localStorage.getItem("upi_records")) || [];
+let div = document.getElementById("recordList");
+
+if(data.length===0){
+div.innerHTML="No records";
+div.classList.remove("hidden");
+return;
+}
+
 let html="";
-d.forEach(r=>{
+data.forEach(r=>{
 html+=`₹${r.amount} - ${r.name}<br>${r.date}<hr>`;
 });
-document.getElementById("recordList").innerHTML = html;
+
+div.innerHTML=html;
+div.classList.remove("hidden");
 }
 
 // PRINT
 function printRecords(){
-let d = JSON.parse(localStorage.getItem("upi_records")) || [];
-let w = window.open();
-w.document.write(`<table border=1>${d.map(r=>`<tr><td>${r.name}</td><td>${r.amount}</td><td>${r.date}</td></tr>`).join("")}</table>`);
+let data = JSON.parse(localStorage.getItem("upi_records")) || [];
+
+if(data.length===0){
+alert("No records");
+return;
+}
+
+let w = window.open("", "", "width=400,height=600");
+
+w.document.write(`
+<h3 style="text-align:center">Records</h3>
+<table border="1" style="width:100%; border-collapse:collapse;">
+<tr><th>Name</th><th>Amount</th><th>Date</th></tr>
+${data.map(r=>`
+<tr>
+<td>${r.name}</td>
+<td>₹${r.amount}</td>
+<td>${r.date}</td>
+</tr>
+`).join("")}
+</table>
+`);
+
 w.print();
 }
 
 // EXPORT
 function exportRecords(){
-let d = JSON.parse(localStorage.getItem("upi_records")) || [];
-let blob = new Blob([JSON.stringify(d)],{type:"application/json"});
-let a=document.createElement("a");
-a.href=URL.createObjectURL(blob);
-a.download="records.json";
+let data = JSON.parse(localStorage.getItem("upi_records")) || [];
+
+if(data.length===0){
+alert("No records");
+return;
+}
+
+let blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+let url = URL.createObjectURL(blob);
+
+let a = document.createElement("a");
+a.href = url;
+a.download = "upi_records.json";
 a.click();
+
+URL.revokeObjectURL(url);
 }
 
 </script>
