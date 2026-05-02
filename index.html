@@ -20,9 +20,9 @@ button { width: 95%; padding: 12px; margin-top: 10px; border: none; border-radiu
 
 /* ✅ ONLY RECEIPT PRINT */
 @media print {
-    body * { visibility: hidden; }
-    #print-area, #print-area * { visibility: visible; }
-    #print-area { position: absolute; left: 0; top: 0; width: 100%; }
+    body * { display: none !important; }
+    #print-area, #print-area * { display: block !important; }
+    #print-area { position: absolute; top: 0; left: 0; width: 100%; }
 }
 </style>
 </head>
@@ -30,13 +30,13 @@ button { width: 95%; padding: 12px; margin-top: 10px; border: none; border-radiu
 <body>
 
 <div id="div-register" class="box">
-<h2>Register User</h2>
-<input type="text" id="reg-name" placeholder="Full Name">
+<h2>Register</h2>
+<input type="text" id="reg-name" placeholder="Name">
 <input type="text" id="reg-upi" placeholder="UPI ID">
 <input type="text" id="reg-user" placeholder="Username">
 <input type="password" id="reg-pass" placeholder="Password">
-<button class="btn-blue" onclick="doRegister()">Register & Next</button>
-<p onclick="showLogin()">Already have account? Login</p>
+<button class="btn-blue" onclick="doRegister()">Register</button>
+<p onclick="showLogin()">Login</p>
 </div>
 
 <div id="div-login" class="box hidden">
@@ -47,30 +47,29 @@ button { width: 95%; padding: 12px; margin-top: 10px; border: none; border-radiu
 </div>
 
 <div id="div-dash" class="box hidden">
-<h3>Welcome, <span id="user-name"></span></h3>
-<p>UPI: <span id="user-upi" style="color:blue"></span></p>
+<h3 id="user-name"></h3>
+<p id="user-upi"></p>
 
-<input type="number" id="bill-amt" placeholder="Enter Amount">
+<input type="number" id="bill-amt" placeholder="Amount">
 
 <button class="btn-blue" onclick="makeQR()">Generate QR</button>
 
 <div id="qr-container" class="hidden">
 <div id="qrcode"></div>
-<button class="btn-green" onclick="gotoReceipt()">Confirm Payment</button>
+<button class="btn-green" onclick="gotoReceipt()">Confirm</button>
 </div>
 
-<!-- ✅ NEW BUTTONS -->
 <button class="btn-blue" onclick="viewRecords()">View Records</button>
 <button class="btn-green" onclick="printRecords()">Print Records</button>
-<button class="btn-blue" onclick="exportRecords()">Export Records</button>
+<button class="btn-blue" onclick="exportRecords()">Export</button>
 
-<div id="recordList" class="hidden"></div>
+<div id="recordList"></div>
 
 <button onclick="location.reload()">Logout</button>
 </div>
 
 <div id="div-receipt" class="box hidden">
-<h2>Payment Done!</h2>
+<h2>Payment Done</h2>
 
 <div id="print-area" class="receipt">
 <div class="line"><span>Name</span><b id="out-name"></b></div>
@@ -87,83 +86,88 @@ button { width: 95%; padding: 12px; margin-top: 10px; border: none; border-radiu
 
 // REGISTER
 function doRegister() {
-let name = reg-name.value;
-let upi = reg-upi.value;
-let user = reg-user.value;
-let pass = reg-pass.value;
+let name = document.getElementById("reg-name").value;
+let upi = document.getElementById("reg-upi").value;
+let user = document.getElementById("reg-user").value;
+let pass = document.getElementById("reg-pass").value;
 
-localStorage.setItem(user, JSON.stringify({name, upi, pass}));
-alert("Registered!");
+if(!name || !upi || !user || !pass) return alert("Fill all");
+
+localStorage.setItem(user, JSON.stringify({name,upi,pass}));
+alert("Registered");
 showLogin();
 }
 
 function showLogin() {
-div-register.classList.add('hidden');
-div-login.classList.remove('hidden');
+document.getElementById("div-register").classList.add("hidden");
+document.getElementById("div-login").classList.remove("hidden");
 }
 
 // LOGIN
 function doLogin() {
-let user = login-user.value;
-let pass = login-pass.value;
+let user = document.getElementById("login-user").value;
+let pass = document.getElementById("login-pass").value;
 
 let data = JSON.parse(localStorage.getItem(user));
-if(data && data.pass === pass) {
+
+if(data && data.pass === pass){
 window.currentUser = data;
-div-login.classList.add('hidden');
-div-dash.classList.remove('hidden');
-user-name.innerText = data.name;
-user-upi.innerText = data.upi;
+document.getElementById("div-login").classList.add("hidden");
+document.getElementById("div-dash").classList.remove("hidden");
+document.getElementById("user-name").innerText = data.name;
+document.getElementById("user-upi").innerText = data.upi;
 } else alert("Wrong login");
 }
 
 // QR
-function makeQR() {
-let amt = bill-amt.value;
-qrcode.innerHTML="";
+function makeQR(){
+let amt = document.getElementById("bill-amt").value;
+if(!amt) return alert("Enter amount");
+
+document.getElementById("qrcode").innerHTML="";
 let link = "upi://pay?pa="+currentUser.upi+"&pn="+currentUser.name+"&am="+amt+"&cu=INR";
-new QRCode(qrcode,{text:link,width:180,height:180});
-qr-container.classList.remove('hidden');
+
+new QRCode(document.getElementById("qrcode"),{text:link,width:180,height:180});
+document.getElementById("qr-container").classList.remove("hidden");
 }
 
-// RECEIPT + SAVE RECORD
-function gotoReceipt() {
-let amt = bill-amt.value;
+// RECEIPT
+function gotoReceipt(){
+let amt = document.getElementById("bill-amt").value;
 
-out-name.innerText = currentUser.name;
-out-upi.innerText = currentUser.upi;
-out-amt.innerText = amt;
-out-date.innerText = new Date().toLocaleString();
+document.getElementById("out-name").innerText = currentUser.name;
+document.getElementById("out-upi").innerText = currentUser.upi;
+document.getElementById("out-amt").innerText = amt;
+document.getElementById("out-date").innerText = new Date().toLocaleString();
 
 // SAVE RECORD
 let rec = JSON.parse(localStorage.getItem("upi_records")) || [];
 rec.unshift({name:currentUser.name,amount:amt,date:new Date().toLocaleString()});
 localStorage.setItem("upi_records", JSON.stringify(rec));
 
-div-dash.classList.add('hidden');
-div-receipt.classList.remove('hidden');
+document.getElementById("div-dash").classList.add("hidden");
+document.getElementById("div-receipt").classList.remove("hidden");
 }
 
-function resetDash() {
-div-receipt.classList.add('hidden');
-div-dash.classList.remove('hidden');
-qr-container.classList.add('hidden');
-bill-amt.value="";
+function resetDash(){
+document.getElementById("div-receipt").classList.add("hidden");
+document.getElementById("div-dash").classList.remove("hidden");
+document.getElementById("qr-container").classList.add("hidden");
+document.getElementById("bill-amt").value="";
 }
 
 // VIEW
-function viewRecords() {
+function viewRecords(){
 let d = JSON.parse(localStorage.getItem("upi_records")) || [];
 let html="";
 d.forEach(r=>{
 html+=`₹${r.amount} - ${r.name}<br>${r.date}<hr>`;
 });
-recordList.innerHTML=html;
-recordList.classList.remove('hidden');
+document.getElementById("recordList").innerHTML = html;
 }
 
 // PRINT
-function printRecords() {
+function printRecords(){
 let d = JSON.parse(localStorage.getItem("upi_records")) || [];
 let w = window.open();
 w.document.write(`<table border=1>${d.map(r=>`<tr><td>${r.name}</td><td>${r.amount}</td><td>${r.date}</td></tr>`).join("")}</table>`);
@@ -171,9 +175,9 @@ w.print();
 }
 
 // EXPORT
-function exportRecords() {
+function exportRecords(){
 let d = JSON.parse(localStorage.getItem("upi_records")) || [];
-let blob = new Blob([JSON.stringify(d)], {type:"application/json"});
+let blob = new Blob([JSON.stringify(d)],{type:"application/json"});
 let a=document.createElement("a");
 a.href=URL.createObjectURL(blob);
 a.download="records.json";
