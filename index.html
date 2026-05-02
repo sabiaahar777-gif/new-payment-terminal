@@ -17,13 +17,6 @@ button { width: 95%; padding: 12px; margin-top: 10px; border: none; border-radiu
 .hidden { display: none; }
 .receipt { border: 2px dashed #333; padding: 15px; margin-top: 15px; text-align: left; background: #fff; }
 .line { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 5px 0; }
-
-/* ✅ ONLY RECEIPT PRINT */
-@media print {
-    body * { visibility: hidden; }
-    #print-area, #print-area * { visibility: visible; }
-    #print-area { position: absolute; left: 0; top: 0; width: 100%; }
-}
 </style>
 </head>
 
@@ -40,14 +33,24 @@ button { width: 95%; padding: 12px; margin-top: 10px; border: none; border-radiu
 <input type="text" id="reg-user" placeholder="Username">
 <input type="password" id="reg-pass" placeholder="Password">
 <button class="btn-blue" onclick="doRegister()">Register</button>
-<p onclick="showLogin()">Login</p>
+<p onclick="showLogin()">Already have account? Login</p>
 </div>
 
+<!-- ✅ UPDATED LOGIN PAGE -->
 <div id="div-login" class="box hidden">
 <h2>Login</h2>
-<input type="text" id="login-user">
-<input type="password" id="login-pass">
+
+<label style="font-size:13px;">Username</label>
+<input type="text" id="login-user" placeholder="Enter Username">
+
+<label style="font-size:13px;">Password</label>
+<input type="password" id="login-pass" placeholder="Enter Password">
+
 <button class="btn-blue" onclick="doLogin()">Login</button>
+
+<p style="font-size:12px; color:blue; cursor:pointer;" onclick="showRegister()">
+New User? Register here
+</p>
 </div>
 
 <div id="div-dash" class="box hidden">
@@ -61,13 +64,6 @@ button { width: 95%; padding: 12px; margin-top: 10px; border: none; border-radiu
 <div id="qrcode"></div>
 <button class="btn-green" onclick="gotoReceipt()">Confirm</button>
 </div>
-
-<!-- ✅ NEW -->
-<button onclick="viewRecords()">View Records</button>
-<button onclick="printRecords()">Print Records</button>
-<button onclick="exportRecords()">Export Records</button>
-
-<div id="recordList" class="hidden"></div>
 
 <button onclick="location.reload()">Logout</button>
 </div>
@@ -107,6 +103,12 @@ document.getElementById('div-register').classList.add('hidden');
 document.getElementById('div-login').classList.remove('hidden');
 }
 
+// ✅ NEW FUNCTION
+function showRegister() {
+document.getElementById('div-login').classList.add('hidden');
+document.getElementById('div-register').classList.remove('hidden');
+}
+
 // LOGIN
 function doLogin() {
 let user = document.getElementById('login-user').value;
@@ -135,7 +137,7 @@ new QRCode(document.getElementById("qrcode"),{text:link,width:180,height:180});
 document.getElementById('qr-container').classList.remove('hidden');
 }
 
-// RECEIPT + SAVE
+// RECEIPT
 function gotoReceipt(){
 let amt = document.getElementById('bill-amt').value;
 
@@ -143,11 +145,6 @@ document.getElementById('out-name').innerText = currentUser.name;
 document.getElementById('out-upi').innerText = currentUser.upi;
 document.getElementById('out-amt').innerText = amt;
 document.getElementById('out-date').innerText = new Date().toLocaleString();
-
-// SAVE RECORD
-let rec = JSON.parse(localStorage.getItem("upi_records")) || [];
-rec.unshift({name:currentUser.name,amount:amt,date:new Date().toLocaleString()});
-localStorage.setItem("upi_records", JSON.stringify(rec));
 
 document.getElementById('div-dash').classList.add('hidden');
 document.getElementById('div-receipt').classList.remove('hidden');
@@ -158,33 +155,6 @@ document.getElementById('div-receipt').classList.add('hidden');
 document.getElementById('div-dash').classList.remove('hidden');
 document.getElementById('qr-container').classList.add('hidden');
 document.getElementById('bill-amt').value="";
-}
-
-// VIEW
-function viewRecords(){
-let data = JSON.parse(localStorage.getItem("upi_records")) || [];
-let div = document.getElementById("recordList");
-
-div.innerHTML = data.map(r=>`₹${r.amount} - ${r.name}<br>${r.date}<hr>`).join("");
-div.classList.remove("hidden");
-}
-
-// PRINT
-function printRecords(){
-let data = JSON.parse(localStorage.getItem("upi_records")) || [];
-let w = window.open();
-w.document.write(data.map(r=>`${r.name} ₹${r.amount} ${r.date}<br>`).join(""));
-w.print();
-}
-
-// EXPORT
-function exportRecords(){
-let data = JSON.parse(localStorage.getItem("upi_records")) || [];
-let blob = new Blob([JSON.stringify(data)],{type:"application/json"});
-let a=document.createElement("a");
-a.href=URL.createObjectURL(blob);
-a.download="records.json";
-a.click();
 }
 
 </script>
