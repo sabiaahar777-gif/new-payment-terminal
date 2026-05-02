@@ -8,59 +8,64 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
-body { font-family: 'Segoe UI'; background: #eef2f7; display:flex; justify-content:center; padding:20px; }
-.box { background:white; width:350px; padding:20px; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.2); text-align:center; }
-input { width:90%; padding:10px; margin:6px 0; border-radius:6px; border:1px solid #ccc; }
-button { width:95%; padding:10px; margin-top:8px; border:none; border-radius:8px; cursor:pointer; }
-.btn-blue { background:#2563eb; color:white; }
-.btn-green { background:#16a34a; color:white; }
-.hidden { display:none; }
-
-.receipt { border:2px dashed #333; padding:10px; margin-top:10px; }
-.line { display:flex; justify-content:space-between; }
+body { font-family: sans-serif; background: #e5e7eb; display: flex; justify-content: center; padding: 20px; }
+.box { background: white; width: 100%; max-width: 380px; padding: 20px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); text-align: center; }
+input { width: 90%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+button { width: 95%; padding: 12px; margin-top: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
+.btn-blue { background: #2563eb; color: white; }
+.btn-green { background: #16a34a; color: white; }
+.hidden { display: none; }
+.receipt { border: 2px dashed #333; padding: 15px; margin-top: 15px; text-align: left; background: #fff; }
+.line { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 5px 0; }
 
 @media print {
- body * { visibility:hidden; }
- #print-area, #print-area * { visibility:visible; }
- #print-area { position:absolute; top:0; left:0; width:100%; }
+    body * { visibility: hidden; }
+    #print-area, #print-area * { visibility: visible; }
+    #print-area { position: absolute; left: 0; top: 0; width: 100%; }
 }
 </style>
 </head>
 
 <body>
 
+<div class="logo-container">
+<img src="logo2.png">
+</div>
+
 <!-- REGISTER -->
 <div id="div-register" class="box">
-<h2>Register</h2>
-<input id="reg-name" placeholder="Full Name">
-<input id="reg-upi" placeholder="UPI ID">
-<input id="reg-user" placeholder="Username">
+<h2>Register User</h2>
+<input type="text" id="reg-name" placeholder="Full Name">
+<input type="text" id="reg-upi" placeholder="UPI ID">
+<input type="text" id="reg-user" placeholder="Username">
 <input type="password" id="reg-pass" placeholder="Password">
 <button class="btn-blue" onclick="doRegister()">Register</button>
 <p onclick="showLogin()">Login</p>
 </div>
 
-<!-- LOGIN -->
+<!-- LOGIN (UPDATED ONLY HERE) -->
 <div id="div-login" class="box hidden">
 <h2>Login</h2>
 
 <p style="text-align:left;">Username</p>
-<input id="login-user" placeholder="Enter Username">
+<input type="text" id="login-user" placeholder="Enter Username">
 
 <p style="text-align:left;">Password</p>
 <input type="password" id="login-pass" placeholder="Enter Password">
 
 <button class="btn-blue" onclick="doLogin()">Login</button>
 
-<p style="color:blue;cursor:pointer;" onclick="showRegister()">New User Registration</p>
+<p style="font-size:12px; color:blue; cursor:pointer;" onclick="showRegister()">
+New User Registration
+</p>
 </div>
 
-<!-- DASHBOARD -->
+<!-- DASHBOARD SAME -->
 <div id="div-dash" class="box hidden">
 <h3>Welcome, <span id="user-name"></span></h3>
 <p>UPI: <span id="user-upi"></span></p>
 
-<input id="bill-amt" type="number" placeholder="Amount">
+<input type="number" id="bill-amt" placeholder="Amount">
 <button class="btn-blue" onclick="makeQR()">Generate QR</button>
 
 <div id="qr-container" class="hidden">
@@ -77,7 +82,7 @@ button { width:95%; padding:10px; margin-top:8px; border:none; border-radius:8px
 <button onclick="location.reload()">Logout</button>
 </div>
 
-<!-- RECEIPT -->
+<!-- RECEIPT SAME -->
 <div id="div-receipt" class="box hidden">
 <h2>Payment Done</h2>
 
@@ -108,18 +113,19 @@ alert("Registered");
 showLogin();
 }
 
-function showLogin(){
+function showLogin() {
 document.getElementById('div-register').classList.add('hidden');
 document.getElementById('div-login').classList.remove('hidden');
 }
 
-function showRegister(){
+// NEW FUNCTION ONLY
+function showRegister() {
 document.getElementById('div-login').classList.add('hidden');
 document.getElementById('div-register').classList.remove('hidden');
 }
 
 // LOGIN
-function doLogin(){
+function doLogin() {
 let user = document.getElementById('login-user').value;
 let pass = document.getElementById('login-pass').value;
 
@@ -131,7 +137,7 @@ document.getElementById('div-login').classList.add('hidden');
 document.getElementById('div-dash').classList.remove('hidden');
 document.getElementById('user-name').innerText = data.name;
 document.getElementById('user-upi').innerText = data.upi;
-}else alert("Wrong login");
+} else alert("Wrong login");
 }
 
 // QR
@@ -140,13 +146,13 @@ let amt = document.getElementById('bill-amt').value;
 if(!amt) return alert("Enter amount");
 
 document.getElementById('qrcode').innerHTML="";
-let link="upi://pay?pa="+currentUser.upi+"&pn="+currentUser.name+"&am="+amt+"&cu=INR";
+let link = "upi://pay?pa="+currentUser.upi+"&pn="+currentUser.name+"&am="+amt+"&cu=INR";
 
 new QRCode(document.getElementById("qrcode"),{text:link,width:180,height:180});
 document.getElementById('qr-container').classList.remove('hidden');
 }
 
-// RECEIPT
+// RECEIPT + SAVE
 function gotoReceipt(){
 let amt = document.getElementById('bill-amt').value;
 
@@ -170,7 +176,7 @@ document.getElementById('qr-container').classList.add('hidden');
 document.getElementById('bill-amt').value="";
 }
 
-// RECORDS
+// VIEW
 function viewRecords(){
 let data = JSON.parse(localStorage.getItem("upi_records")) || [];
 let div = document.getElementById("recordList");
@@ -179,6 +185,7 @@ div.innerHTML = data.map(r=>`₹${r.amount} - ${r.name}<br>${r.date}<hr>`).join(
 div.classList.remove("hidden");
 }
 
+// PRINT
 function printRecords(){
 let data = JSON.parse(localStorage.getItem("upi_records")) || [];
 let w = window.open();
@@ -186,6 +193,7 @@ w.document.write(data.map(r=>`${r.name} ₹${r.amount} ${r.date}<br>`).join(""))
 w.print();
 }
 
+// EXPORT
 function exportRecords(){
 let data = JSON.parse(localStorage.getItem("upi_records")) || [];
 let blob = new Blob([JSON.stringify(data)],{type:"application/json"});
