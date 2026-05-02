@@ -1,235 +1,198 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UPI BILLING SYSTEM</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPI BILLING SYSTEM</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #e5e7eb; display: flex; justify-content: center; padding: 20px; }
+        .box { background: white; width: 100%; max-width: 380px; padding: 20px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); text-align: center; }
+        input { width: 90%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+        button { width: 95%; padding: 12px; margin-top: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .btn-blue { background: #2563eb; color: white; }
+        .btn-green { background: #16a34a; color: white; }
+        .hidden { display: none; }
+        .receipt { border: 2px dashed #333; padding: 15px; margin-top: 15px; text-align: left; background: #fff; }
+        .line { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 5px 0; }
 
-<style>
-body { font-family: sans-serif; background: #e5e7eb; display: flex; justify-content: center; padding: 20px; }
-.box { background: white; width: 100%; max-width: 380px; padding: 20px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); text-align: center; }
-input { width: 90%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
-button { width: 95%; padding: 12px; margin-top: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
-.btn-blue { background: #2563eb; color: white; }
-.btn-green { background: #16a34a; color: white; }
-.hidden { display: none; }
-.receipt { border: 2px dashed #333; padding: 15px; margin-top: 15px; text-align: left; background: #fff; }
-.line { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 5px 0; }
-
-/* ✅ ONLY RECEIPT PRINT */
-@media print {
-    body * { visibility: hidden; }
-    #print-area, #print-area * { visibility: visible; }
-    #print-area { position: absolute; left: 0; top: 0; width: 100%; }
-}
-</style>
+        /* ✅ ONLY RECEIPT PRINT */
+        @media print {
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; }
+        }
+    </style>
 </head>
 
 <body>
 
+<div class="logo-container">
+    <img src="logo2.png" alt="Logo" id="site-logo">
+</div>
+
 <div id="div-register" class="box">
-<h2>Register User</h2>
-<input type="text" id="reg-name" placeholder="Full Name">
-<input type="text" id="reg-upi" placeholder="UPI ID">
-<input type="text" id="reg-user" placeholder="Username">
-<input type="password" id="reg-pass" placeholder="Password">
-<button class="btn-blue" onclick="doRegister()">Register</button>
-<p onclick="showLogin()">Already have account? Login</p>
+    <h2>Register User</h2>
+    <input type="text" id="reg-name" placeholder="Full Name (E.g. Sandeep Singh)">
+    <input type="text" id="reg-upi" placeholder="UPI ID (E.g. sandeep@okicici)">
+    <input type="text" id="reg-user" placeholder="Create Username">
+    <input type="password" id="reg-pass" placeholder="Create Password">
+    <button class="btn-blue" onclick="doRegister()">Register & Next</button>
+    <p style="font-size:12px; color:gray; cursor:pointer;" onclick="showLogin()">Already have account? Login</p>
 </div>
 
 <div id="div-login" class="box hidden">
-<h2>Login</h2>
-<input type="text" id="login-user">
-<input type="password" id="login-pass">
-<button class="btn-blue" onclick="doLogin()">Login</button>
+    <h2>Login</h2>
+    <input type="text" id="login-user" placeholder="Username">
+    <input type="password" id="login-pass" placeholder="Password">
+    <button class="btn-blue" onclick="doLogin()">Login to Dashboard</button>
 </div>
 
 <div id="div-dash" class="box hidden">
-<h3>Welcome, <span id="user-name"></span></h3>
-<p>UPI: <span id="user-upi" style="color:blue"></span></p>
+    <h3>Welcome, <span id="user-name"></span></h3>
+    <p>UPI: <span id="user-upi" style="color:blue"></span></p>
+    <hr>
 
-<input type="number" id="bill-amt" placeholder="Enter Amount">
+    <input type="number" id="bill-amt" placeholder="Enter Amount (₹)">
+    <button class="btn-blue" onclick="makeQR()">1. Generate QR Code</button>
 
-<button class="btn-blue" onclick="makeQR()">Generate QR</button>
+    <div id="qr-container" class="hidden" style="margin-top:15px; background:#f9f9f9; padding:10px;">
+        <div id="qrcode" style="display:flex; justify-content:center;"></div>
+        <p style="color:red; font-size:12px;">Scan this QR to Pay</p>
+        <button class="btn-green" onclick="gotoReceipt()">2. Confirm & Get Receipt</button>
+    </div>
 
-<div id="qr-container" class="hidden">
-<div id="qrcode"></div>
-<button class="btn-green" onclick="gotoReceipt()">Confirm</button>
-</div>
+    <!-- ✅ NEW BUTTONS -->
+    <button class="btn-blue" onclick="viewRecords()">View Records</button>
+    <button class="btn-green" onclick="printRecords()">Print Records</button>
+    <button class="btn-blue" onclick="exportRecords()">Export Records</button>
 
-<!-- ✅ NEW BUTTONS -->
-<button class="btn-blue" onclick="viewRecords()">View Records</button>
-<button class="btn-green" onclick="printRecords()">Print Records</button>
-<button class="btn-blue" onclick="exportRecords()">Export Records</button>
+    <div id="recordList" class="hidden" style="text-align:left;"></div>
 
-<div id="recordList" class="hidden" style="text-align:left;"></div>
-
-<button onclick="location.reload()">Logout</button>
+    <button onclick="location.reload()" style="background:#666; color:white;">Logout</button>
 </div>
 
 <div id="div-receipt" class="box hidden">
-<h2>Payment Done!</h2>
-
-<div id="print-area" class="receipt">
-<div class="line"><span>Name</span><b id="out-name"></b></div>
-<div class="line"><span>UPI</span><b id="out-upi"></b></div>
-<div class="line"><span>Amount</span><b>₹<span id="out-amt"></span></b></div>
-<div class="line"><span>Date</span><span id="out-date"></span></div>
-</div>
-
-<button onclick="window.print()">Print</button>
-<button onclick="resetDash()">New</button>
+    <h2 style="color:green;">Payment Done!</h2>
+    <div class="receipt" id="print-area">
+        <div class="line"><span>Merchant:</span> <b id="out-name"></b></div>
+        <div class="line"><span>UPI ID:</span> <b id="out-upi"></b></div>
+        <div class="line"><span>Amount:</span> <b style="color:green;">₹<span id="out-amt"></span></b></div>
+        <div class="line"><span>Date:</span> <span id="out-date"></span></div>
+        <div class="line"><span>Status:</span> <b style="color:green;">SUCCESS</b></div>
+    </div>
+    <button class="btn-blue" onclick="window.print()">Print / PDF Save</button>
+    <button class="btn-green" onclick="resetDash()">New Billing</button>
 </div>
 
 <script>
-
 // REGISTER
 function doRegister() {
-let name = document.getElementById("reg-name").value;
-let upi = document.getElementById("reg-upi").value;
-let user = document.getElementById("reg-user").value;
-let pass = document.getElementById("reg-pass").value;
+    let name = document.getElementById('reg-name').value;
+    let upi = document.getElementById('reg-upi').value;
+    let user = document.getElementById('reg-user').value;
+    let pass = document.getElementById('reg-pass').value;
 
-if(!name || !upi || !user || !pass) return alert("Fill all fields");
+    if(!name || !upi || !user || !pass){ alert("Sari details bharein!"); return; }
 
-localStorage.setItem(user, JSON.stringify({name,upi,pass}));
-alert("Registered!");
-showLogin();
+    localStorage.setItem(user, JSON.stringify({name,upi,pass}));
+    alert("Registration Successful!");
+    showLogin();
 }
 
 function showLogin() {
-document.getElementById("div-register").classList.add("hidden");
-document.getElementById("div-login").classList.remove("hidden");
+    document.getElementById('div-register').classList.add('hidden');
+    document.getElementById('div-login').classList.remove('hidden');
 }
 
 // LOGIN
 function doLogin() {
-let user = document.getElementById("login-user").value;
-let pass = document.getElementById("login-pass").value;
+    let user = document.getElementById('login-user').value;
+    let pass = document.getElementById('login-pass').value;
 
-let data = JSON.parse(localStorage.getItem(user));
-
-if(data && data.pass === pass){
-window.currentUser = data;
-document.getElementById("div-login").classList.add("hidden");
-document.getElementById("div-dash").classList.remove("hidden");
-document.getElementById("user-name").innerText = data.name;
-document.getElementById("user-upi").innerText = data.upi;
-} else alert("Wrong login");
+    let data = JSON.parse(localStorage.getItem(user));
+    if(data && data.pass === pass){
+        window.currentUser = data;
+        document.getElementById('div-login').classList.add('hidden');
+        document.getElementById('div-dash').classList.remove('hidden');
+        document.getElementById('user-name').innerText = data.name;
+        document.getElementById('user-upi').innerText = data.upi;
+    } else alert("Wrong login");
 }
 
 // QR
-function makeQR(){
-let amt = document.getElementById("bill-amt").value;
-if(!amt || amt<=0) return alert("Enter valid amount");
+function makeQR() {
+    let amt = document.getElementById('bill-amt').value;
+    if(!amt || amt<=0){ alert("Sahi amount bharein!"); return; }
 
-document.getElementById("qrcode").innerHTML="";
-let link = "upi://pay?pa="+currentUser.upi+"&pn="+currentUser.name+"&am="+amt+"&cu=INR";
+    document.getElementById('qrcode').innerHTML = "";
+    let upiLink = "upi://pay?pa=" + currentUser.upi + "&pn=" + currentUser.name + "&am=" + amt + "&cu=INR";
 
-new QRCode(document.getElementById("qrcode"),{text:link,width:180,height:180});
-document.getElementById("qr-container").classList.remove("hidden");
+    new QRCode(document.getElementById("qrcode"), { text: upiLink, width: 180, height: 180 });
+    document.getElementById('qr-container').classList.remove('hidden');
 }
 
-// RECEIPT + SAVE
-function gotoReceipt(){
-let amt = document.getElementById("bill-amt").value;
+// RECEIPT + SAVE RECORD
+function gotoReceipt() {
+    let amt = document.getElementById('bill-amt').value;
 
-document.getElementById("out-name").innerText = currentUser.name;
-document.getElementById("out-upi").innerText = currentUser.upi;
-document.getElementById("out-amt").innerText = amt;
-document.getElementById("out-date").innerText = new Date().toLocaleString();
+    document.getElementById('out-name').innerText = currentUser.name;
+    document.getElementById('out-upi').innerText = currentUser.upi;
+    document.getElementById('out-amt').innerText = amt;
+    document.getElementById('out-date').innerText = new Date().toLocaleString();
 
-// SAVE RECORD
-let records = JSON.parse(localStorage.getItem("upi_records")) || [];
-records.unshift({
-name: currentUser.name,
-upi: currentUser.upi,
-amount: amt,
-date: new Date().toLocaleString()
-});
-localStorage.setItem("upi_records", JSON.stringify(records));
+    // SAVE
+    let rec = JSON.parse(localStorage.getItem("upi_records")) || [];
+    rec.unshift({name:currentUser.name, amount:amt, date:new Date().toLocaleString()});
+    localStorage.setItem("upi_records", JSON.stringify(rec));
 
-document.getElementById("div-dash").classList.add("hidden");
-document.getElementById("div-receipt").classList.remove("hidden");
+    document.getElementById('div-dash').classList.add('hidden');
+    document.getElementById('div-receipt').classList.remove('hidden');
 }
 
-function resetDash(){
-document.getElementById("div-receipt").classList.add("hidden");
-document.getElementById("div-dash").classList.remove("hidden");
-document.getElementById("qr-container").classList.add("hidden");
-document.getElementById("bill-amt").value="";
+function resetDash() {
+    document.getElementById('div-receipt').classList.add('hidden');
+    document.getElementById('div-dash').classList.remove('hidden');
+    document.getElementById('qr-container').classList.add('hidden');
+    document.getElementById('bill-amt').value = "";
 }
 
 // VIEW
-function viewRecords(){
-let data = JSON.parse(localStorage.getItem("upi_records")) || [];
-let div = document.getElementById("recordList");
+function viewRecords() {
+    let data = JSON.parse(localStorage.getItem("upi_records")) || [];
+    let div = document.getElementById("recordList");
 
-if(data.length===0){
-div.innerHTML="No records";
-div.classList.remove("hidden");
-return;
-}
+    if(data.length===0){ div.innerHTML="No records"; div.classList.remove("hidden"); return; }
 
-let html="";
-data.forEach(r=>{
-html+=`₹${r.amount} - ${r.name}<br>${r.date}<hr>`;
-});
+    let html="";
+    data.forEach(r=>{ html+=`₹${r.amount} - ${r.name}<br>${r.date}<hr>`; });
 
-div.innerHTML=html;
-div.classList.remove("hidden");
+    div.innerHTML=html;
+    div.classList.remove("hidden");
 }
 
 // PRINT
-function printRecords(){
-let data = JSON.parse(localStorage.getItem("upi_records")) || [];
+function printRecords() {
+    let data = JSON.parse(localStorage.getItem("upi_records")) || [];
+    if(data.length===0){ alert("No records"); return; }
 
-if(data.length===0){
-alert("No records");
-return;
-}
-
-let w = window.open("", "", "width=400,height=600");
-
-w.document.write(`
-<h3 style="text-align:center">Records</h3>
-<table border="1" style="width:100%; border-collapse:collapse;">
-<tr><th>Name</th><th>Amount</th><th>Date</th></tr>
-${data.map(r=>`
-<tr>
-<td>${r.name}</td>
-<td>₹${r.amount}</td>
-<td>${r.date}</td>
-</tr>
-`).join("")}
-</table>
-`);
-
-w.print();
+    let w = window.open();
+    w.document.write(`<table border=1>${data.map(r=>`<tr><td>${r.name}</td><td>${r.amount}</td><td>${r.date}</td></tr>`).join("")}</table>`);
+    w.print();
 }
 
 // EXPORT
-function exportRecords(){
-let data = JSON.parse(localStorage.getItem("upi_records")) || [];
+function exportRecords() {
+    let data = JSON.parse(localStorage.getItem("upi_records")) || [];
+    if(data.length===0){ alert("No records"); return; }
 
-if(data.length===0){
-alert("No records");
-return;
+    let blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "upi_records.json";
+    a.click();
 }
-
-let blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
-let url = URL.createObjectURL(blob);
-
-let a = document.createElement("a");
-a.href = url;
-a.download = "upi_records.json";
-a.click();
-
-URL.revokeObjectURL(url);
-}
-
 </script>
 
 </body>
