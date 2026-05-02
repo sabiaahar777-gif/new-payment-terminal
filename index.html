@@ -36,21 +36,23 @@ button { width: 95%; padding: 12px; margin-top: 10px; border: none; border-radiu
 <p onclick="showLogin()">Already have account? Login</p>
 </div>
 
-<!-- ✅ UPDATED LOGIN PAGE -->
+<!-- ✅ CLEARLY UPDATED LOGIN -->
 <div id="div-login" class="box hidden">
 <h2>Login</h2>
 
-<label style="font-size:13px;">Username</label>
-<input type="text" id="login-user" placeholder="Enter Username">
+<p style="font-size:13px; text-align:left;">Enter Username</p>
+<input type="text" id="login-user" placeholder="Username">
 
-<label style="font-size:13px;">Password</label>
-<input type="password" id="login-pass" placeholder="Enter Password">
+<p style="font-size:13px; text-align:left;">Enter Password</p>
+<input type="password" id="login-pass" placeholder="Password">
 
 <button class="btn-blue" onclick="doLogin()">Login</button>
 
-<p style="font-size:12px; color:blue; cursor:pointer;" onclick="showRegister()">
-New User? Register here
-</p>
+<!-- ✅ NEW BUTTON -->
+<button style="background:#ddd; color:black;" onclick="showRegister()">
+New User Registration
+</button>
+
 </div>
 
 <div id="div-dash" class="box hidden">
